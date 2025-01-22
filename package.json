@@ -1,0 +1,20 @@
+{
+    "name": "@ark/blogs",
+    "version": "0.0.0",
+    "scripts": {
+        "dev": "npm run sass",
+        "css": "sass css/index.scss:css/step.css --no-source-map --style compressed && ./node_modules/.bin/postcss ./css/step.css --use autoprefixer -o ./static/index.css --no-map",
+        "sass": "sass --watch css/index.scss:css/step.css --no-source-map --style compressed",
+        "sass:admin": "sass --watch css/admin.scss:./static/admin/css/index.css --no-source-map --style compressed",
+        "prefix": "./node_modules/.bin/postcss ./css/step.css --use autoprefixer -o ./static/index.css --no-map -w"
+    },
+    "devDependencies": {
+        "sass": "^1.62.1"
+    },
+    "dependencies": {
+        "autoprefixer": "^10.4.20",
+        "postcss": "^8.4.49",
+        "postcss-cli": "^11.0.0"
+    },
+    "browserslist": "last 4 versions"
+}

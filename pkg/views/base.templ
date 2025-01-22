@@ -1,0 +1,198 @@
+package views
+
+import (
+	"context"
+	"fmt"
+	"github.com/easterok/blogs/pkg/i18n"
+	"github.com/easterok/blogs/pkg/middlewares"
+	"github.com/easterok/blogs/pkg/utils"
+	"github.com/easterok/blogs/pkg/views/components"
+	"strings"
+	"time"
+)
+
+type BaseViewProps struct {
+	Title      string
+	TitleEn    string
+	Desc       string
+	DescEn     string
+	Keywords   string
+	KeywordsEn string
+	Image      string
+
+	UpdatedAt *time.Time
+	CreatedAt *time.Time
+
+	Contrast bool
+}
+
+func resolveBase(href string, ctx context.Context) string {
+	full := middlewares.GetContextFullpath(ctx)
+
+	if strings.HasPrefix(full, "/en") || strings.HasPrefix(full, "/ru") {
+		href = href + full[3:]
+	} else {
+		href = href + full
+	}
+
+	return href
+}
+
+var baseImage = utils.Cdn("/blog/67193054-db0a-4893-a5a1-e74c9ca961eb.jpg")
+
+templ Base(props BaseViewProps) {
+	{{
+	lang := middlewares.GetContextPreferLanguage(ctx)
+	title := i18n.TranslateBetween(lang, props.TitleEn, props.Title)
+	desc := i18n.TranslateBetween(lang, props.DescEn, props.Desc)
+	fullpath := middlewares.GetContextHost(ctx) + middlewares.GetContextFullpath(ctx)
+	kw := i18n.TranslateBetween(lang, props.KeywordsEn, props.Keywords)
+	img := baseImage
+	if props.Image != "" {
+		img = utils.Cdn(props.Image)
+	}
+	}}
+	<!DOCTYPE html>
+	<html lang={ lang }>
+		<head>
+			<meta charset="UTF-8"/>
+			<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+			<meta http-equiv="x-ua-compatible" content="IE=edge"/>
+			<title>{ title }</title>
+			<meta name="description" content={ desc }/>
+			<meta name="HandheldFriendly" content="True"/>
+			<meta name="application-name" content="WonderTales Blog"/>
+			<meta name="apple-mobile-web-app-title" content="WonderTales Blog"/>
+			<meta name="apple-mobile-web-app-capable" content="yes"/>
+			<meta name="mobile-web-app-capable" content="yes"/>
+			<meta name="msapplication-TileColor" content="#fff"/>
+			<meta name="twitter:card" content="summary_large_image"/>
+			<meta name="twitter:title" content={ title }/>
+			<meta name="twitter:description" content={ desc }/>
+			<meta name="twitter:url" content={ fullpath }/>
+			<meta name="twitter:creator" content="@WonderTales_io"/>
+			<meta name="twitter:site" content="https://x.com/WonderTales_io"/>
+			<meta name="twitter:image" content={ img }/>
+			if kw != "" {
+				<meta name="keywords" content={ kw }/>
+			}
+			<meta property="og:title" content={ title }/>
+			<meta property="og:description" content={ desc }/>
+			<meta property="og:site_name" content="WonderTales Blog"/>
+			<meta property="og:url" content={ fullpath }/>
+			<meta property="og:locale" content={ lang }/>
+			<meta property="og:type" content="article"/>
+			<meta property="article:publisher" content="https://www.ark.software/"/>
+			if props.CreatedAt != nil {
+				<meta property="article:published_time" content={ props.CreatedAt.Format(time.RFC3339) }/>
+			}
+			if props.UpdatedAt != nil {
+				<meta property="article:modified_time" content={ props.UpdatedAt.Format(time.RFC3339) }/>
+			}
+			<meta property="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1"/>
+			<meta property="theme-color" content="#fff"/>
+			<meta property="og:image" content={ img }/>
+			<meta property="og:image:secure_url" content={ img }/>
+			<meta property="og:image:type" content={ fmt.Sprintf("image/%s", utils.FileExtentionWithoutDot(img)) }/>
+			<meta property="og:image:alt" content={ desc }/>
+			<meta property="og:image:width" content="512"/>
+			<meta property="og:image:height" content="512"/>
+			<link rel="preload" href={ img } as="image"/>
+			<link rel="canonical" href={ fullpath }/>
+			<link rel="shortcut icon" href="/static/icons/favicon.png"/>
+			<link rel="icon" sizes="192x192" href="/static/icons/apple-touch-icon.png"/>
+			<link rel="apple-touch-icon" sizes="180x180" href="/static/icons/apple-touch-icon.png"/>
+			<link rel="icon" type="image/png" sizes="16x16" href="/static/icons/favicon-16x16.png"/>
+			<link rel="icon" type="image/png" sizes="32x32" href="/static/icons/favicon-32x32.png"/>
+			<link rel="icon" href="/static/icons/favicon.ico"/>
+			<link rel="mask-icon" href="/static/icons/safari-pinned-tab.svg" color="#2F8DFF"/>
+			<link rel="stylesheet" href={ middlewares.FormatStaticLinkFromContext("/static/index.css", ctx) }/>
+			<link rel="preconnect" href="https://fonts.googleapis.com" crossorigin/>
+			<link rel="preconnect" href={ utils.Cdn("/") } crossorigin/>
+			<link
+				rel="preload"
+				href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap"
+				as="style"
+				onload="this.onload=null;this.rel='stylesheet'"
+			/>
+		</head>
+		<body hx-history="false">
+			<noscript>
+				<link
+					href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+					rel="stylesheet"
+					type="text/css"
+				/>
+			</noscript>
+			@Menu(props, lang)
+			{ children... }
+			@MenuScript()
+		</body>
+	</html>
+}
+
+templ MenuScript() {
+	<script>(function(){const menu=document.querySelector(".ark-menu");let prev=!1;function toggle(){menu&&(prev?menu.setAttribute("data-scroll",""):menu.removeAttribute("data-scroll"))}function onScroll(){let e=document.documentElement.scrollTop>8;prev!==e&&(prev=e,toggle())}menu&&(document.addEventListener("scroll",onScroll),onScroll());const trigger=document.querySelector(".js-trigger"),drop=document.querySelector(".js-drop");let opened=!1;function onClickOutside(e){drop&&(drop.style.display="none",opened=!1),document.removeEventListener("click",onClickOutside)}trigger&&drop&&trigger.addEventListener("click",(function(e){e.stopPropagation(),e.preventDefault(),document.removeEventListener("click",onClickOutside),opened?drop.style.display="none":(drop.style.display="flex",document.addEventListener("click",onClickOutside)),opened=!opened}));})()</script>
+}
+
+templ Menu(props BaseViewProps, lang string) {
+	<menu
+		class="ark-menu"
+		if props.Contrast {
+			data-mode="contrast"
+		}
+	>
+		<div class="ark-menu__content">
+			<a href={ templ.SafeURL(i18n.Translate(lang, "landing_href")) } aria-label={ i18n.Translate(lang, "menu_home_label") } data-logo class="ark-menu__link">
+				<span class="ark-icon ark-icon_logo"></span>
+			</a>
+			<div class="ark-menu__links">
+				<a href={ templ.SafeURL(resolveBase(i18n.TranslateBetween(lang, "/ru", "/en"), ctx)) } class="ark-menu__link">
+					{ i18n.TranslateBetween(lang, "Ru", "En") }
+				</a>
+				<div class="vl"></div>
+				@components.Link("/articles", templ.Attributes{"class": "ark-menu__link ark-hide_mobile"}) {
+					<span class="ark-icon ark-icon_blog"></span>
+					{ i18n.Translate(lang, "menu_blog") }
+				}
+				@components.Link("/", templ.Attributes{"class": "ark-menu__link ark-hide_mobile"}) {
+					<span class="ark-icon ark-icon_tale"></span>
+					{ i18n.Translate(lang, "menu_tales") }
+				}
+				<a
+					href={ templ.SafeURL(i18n.Translate(lang, "app_href")) }
+					target="_blank"
+					class="ark-button"
+					data-appearance="blur"
+					data-size="s"
+				>
+					{ i18n.Translate(lang, "menu_create") }
+				</a>
+				<button class="ark-button ark-show_mobile js-trigger" data-appearance="blur" data-size="s" data-shape="rounded" aria-label="Menu">
+					<span class="ark-icon ark-icon_burger"></span>
+				</button>
+				<div class="ark-dropdown js-drop">
+					@components.Link("/articles", templ.Attributes{"class": "ark-button", "data-appearance": "menu", "data-size": "s"}) {
+						<span class="ark-icon ark-icon_blog"></span>
+						{ i18n.Translate(lang, "menu_blog") }
+					}
+					@components.Link("/", templ.Attributes{"class": "ark-button", "data-appearance": "menu", "data-size": "s"}) {
+						<span class="ark-icon ark-icon_tale"></span>
+						{ i18n.Translate(lang, "menu_tales") }
+					}
+				</div>
+			</div>
+		</div>
+	</menu>
+}
+
+templ Gradient(t string) {
+	<div
+		class="ark-main-bg"
+		if t != "" {
+			data-type={ t }
+		}
+	>
+		<div class="ark-main-bg__over"></div>
+	</div>
+}

@@ -1,0 +1,85 @@
+@import './mixins.scss';
+
+.ark-checkbox {
+    @include transition(all);
+
+    transition-property: opacity, outline-color;
+
+    position: relative;
+    -webkit-appearance: none;
+    appearance: none;
+
+    outline: 2px solid var(--a-outline);
+    outline-offset: -2px;
+    border-radius: var(--a-radius);
+    color: var(--ark-white);
+    background: var(--s-background, transparent);
+    inline-size: var(--a-size);
+    block-size: var(--a-size);
+    flex-shrink: 0;
+
+    cursor: pointer;
+
+    --a-outline: var(--ark-text-color-16);
+    --a-size: 1rem;
+    --a-radius: 0.25rem;
+    --a-mask: var(--ark-empty-icon);
+
+    &[data-size='m'] {
+        --a-size: 1.25rem;
+        --a-radius: 0.25rem;
+    }
+
+    &[data-size='l'] {
+        --a-size: 1.5rem;
+        --a-radius: 0.625rem;
+    }
+
+    &:not(&:disabled, &[data-state='invalid']) {
+        @include hover {
+            opacity: var(--ark-hover-opacity);
+        }
+    }
+
+    &:disabled {
+        cursor: auto;
+    }
+
+    &:before {
+        @include fullsize;
+        @include transition(transform);
+
+        -webkit-mask: var(--a-mask) no-repeat center/contain;
+        mask: var(--a-mask) no-repeat center/contain;
+        -webkit-mask-composite: source-in, xor;
+        mask-composite: intersect;
+
+        content: '';
+        background: currentColor;
+        transform: scale(0);
+    }
+
+    &:checked,
+    &:indeterminate {
+        background: var(--ark-primary);
+        --a-outline: none;
+
+        &:before {
+            transform: scale(1);
+        }
+    }
+
+    &:checked {
+        --a-mask: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>');
+    }
+
+    &:indeterminate {
+        --a-mask: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/></svg>');
+    }
+}
+
+.ark-label {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}

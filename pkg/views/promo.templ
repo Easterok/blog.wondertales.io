@@ -1,0 +1,79 @@
+package views
+
+import (
+	"fmt"
+	"github.com/easterok/blogs/pkg/i18n"
+	"github.com/easterok/blogs/pkg/utils"
+)
+
+templ PromoInsideTale(lang string) {
+	{{ title := i18n.Translate(lang, "promo_tale_title") }}
+	<section class="ark-promo-tale ark-space_bottom-8">
+		<div class="ark-promo-tale__image">
+			<img class="ark-promo-child__bg" alt="star background" src={ utils.Cdn("/blog/your_child_bg.webp") }/>
+			<img src={ utils.Cdn(i18n.Translate(lang, "promo_child_photo")) } alt={ title } style="top:10%"/>
+		</div>
+		<div class="ark-promo-tale__content">
+			<div>
+				<h6 class="ark-text_h6 ark-space_bottom-2">{ title }</h6>
+				<p class="ark-text_body-l">{ i18n.Translate(lang, "promo_tale_desc") }</p>
+			</div>
+			<a class="ark-button" data-appearance="primary" href={ templ.SafeURL(i18n.Translate(lang, "app_href")) } style="align-self:flex-start">
+				{ i18n.Translate(lang, "promo_tale_btn") }
+			</a>
+		</div>
+	</section>
+}
+
+templ Chapters(lang string, s ...string) {
+	<div class="ark-chapters">
+		<h4 class="ark-chapters__title">{ i18n.Translate(lang, "chapters") }</h4>
+		for _,item := range utils.ExtractAnchors(s...) {
+			<a href={ templ.SafeURL(fmt.Sprintf("#%s", item.Id)) } class="ark-chapters__item">{ item.Text }</a>
+		}
+	</div>
+}
+
+templ CreateTale(lang string) {
+	<a
+		href={ templ.SafeURL(i18n.Translate(lang, "app_href")) }
+		target="_blank"
+		class="ark-create-tale"
+	>
+		<button class="ark-button ark-space_bottom-4" data-appearance="primary" data-shape="rounded" aria-label="Create Tale">
+			<span class="ark-icon ark-icon_plus"></span>
+		</button>
+		<p>
+			@templ.Raw(i18n.Translate(lang, "create_tale"))
+		</p>
+	</a>
+}
+
+templ PromoChild(lang string, stupid ...bool) {
+	{{ title := i18n.Translate(lang, "promo_child_title") }}
+	<div
+		class="ark-promo-child"
+		if len(stupid) == 1 {
+			data-std
+		}
+	>
+		<div
+			class="ark-promo-child__content"
+			if len(stupid) == 1 {
+				data-std
+			}
+		>
+			<img class="ark-promo-child__bg" alt="star background" src={ utils.Cdn("/blog/your_child_bg.webp") }/>
+			<h3 class="ark-promo-child__title">
+				@templ.Raw(title)
+			</h3>
+			<p class="ark-promo-child__desc">
+				{ i18n.Translate(lang, "promo_child_desc") }
+			</p>
+			<a href={ templ.SafeURL(i18n.Translate(lang, "app_href")) } target="_blank" class="ark-button" data-appearance="primary" style="align-self:flex-start">
+				{ i18n.Translate(lang, "promo_child_btn") }
+			</a>
+			<img class="ark-promo-child__img" alt={ title } src={ utils.Cdn(i18n.Translate(lang, "promo_child_photo")) }/>
+		</div>
+	</div>
+}

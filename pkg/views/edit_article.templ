@@ -1,0 +1,493 @@
+package views
+
+import (
+	"fmt"
+	"github.com/easterok/blogs/pkg/db"
+	"github.com/easterok/blogs/pkg/utils"
+	"github.com/easterok/blogs/pkg/views/components"
+)
+
+type EditArticleProps struct {
+	CatalogItems *[]db.Catalog
+	Article      *db.Article
+}
+
+templ ValidateArticle(article *db.Article) {
+	{{
+		ru, ruseo := utils.ValidateRuArticle(article)
+		en, enseo := utils.ValidateEnArticle(article)
+	}}
+	<p>Английская версия</p>
+	if len(en) == 0 {
+		<p class="ark-text_body-s">Контент: ok</p>
+	} else {
+		<p class="ark-text_body-s">Контент:</p>
+		<p class="ark-text_body-xs" style="color:var(--ark-error-fill)">{ en[0] }</p>
+	}
+	if len(enseo) == 0 {
+		<p class="ark-text_body-s">SEO: ok</p>
+	} else {
+		<p class="ark-text_body-s">SEO:</p>
+		<p class="ark-text_body-xs" style="color:var(--ark-error-fill)">{ enseo[0] }</p>
+	}
+	<p>Русская версия</p>
+	if len(ru) == 0 {
+		<p class="ark-text_body-s">Контент: ok</p>
+	} else {
+		<p class="ark-text_body-s">Контент:</p>
+		<p class="ark-text_body-xs" style="color:var(--ark-error-fill)">{ ru[0] }</p>
+	}
+	if len(ruseo) == 0 {
+		<p class="ark-text_body-s">SEO: ok</p>
+	} else {
+		<p class="ark-text_body-s">SEO:</p>
+		<p class="ark-text_body-xs" style="color:var(--ark-error-fill)">{ ruseo[0] }</p>
+	}
+}
+
+templ ArticleConnections(items []db.CatalogArticles, storyId uint, allItems *[]db.Catalog) {
+	{{
+		selected := make(map[uint]bool, len(items))
+
+		for _, i := range items {
+			selected[i.CatalogID] = true
+		}
+	}}
+	if len(items) == 0 {
+		<div>Не привязан</div>
+	} else {
+		for _, cat := range items {
+			<label style="display: flex; flex-direction: column">
+				<a class="ark-text_body-xs ark-admin-link" href={ templ.SafeURL(fmt.Sprintf("/admin/articles/catalog/%d", cat.CatalogID)) }>
+					if Bool(cat.Catalog.Hidden) {
+						Скрыт
+					} else {
+						Опубликован
+					}
+				</a>
+				<select
+					name="catalog"
+					hx-patch={ fmt.Sprintf("/admin/article/%d/connection/%d", storyId, cat.ID) }
+					hx-trigger="change"
+					hx-indicator="#updateResult"
+					hx-target="#taleConnection"
+					style="max-width:120px"
+				>
+					<option value="-1">
+						Убрать из категории
+					</option>
+					for _, item := range *allItems {
+						<option
+							if cat.CatalogID == item.ID {
+								selected
+							}
+							value={ fmt.Sprintf("%d", item.ID) }
+						>
+							id: { fmt.Sprintf("%d", item.ID) }. назв: { item.NameEng }
+						</option>
+					}
+				</select>
+			</label>
+		}
+	}
+	<select
+		name="catalog"
+		hx-post={ fmt.Sprintf("/admin/article/%d/connection", storyId) }
+		hx-trigger="change"
+		hx-indicator="#updateResult"
+		hx-target="#taleConnection"
+		style="max-width:120px"
+	>
+		<option>Добавить</option>
+		for _, item := range *allItems {
+			if !selected[item.ID] {
+				<option
+					value={ fmt.Sprintf("%d", item.ID) }
+				>
+					id: { fmt.Sprintf("%d", item.ID) }. назв: { item.NameEng }
+				</option>
+			}
+		}
+	</select>
+}
+
+templ EditArticle(props EditArticleProps) {
+	@AdminBase() {
+		<div class="taleContainer">
+			<div class="ark-pro-image ark-space_bottom-12">
+				<div class="ark-pro-image__container">
+					<input
+						id="fileUpload"
+						hx-indicator="#updateResult"
+						hx-encoding="multipart/form-data"
+						hx-post={ fmt.Sprintf("/admin/articles/%d/cover", props.Article.ID) }
+						hx-trigger="ark-upload-file"
+						name="file"
+						type="file"
+						accept="image/*"
+						style="position: absolute;left:0;top:0;width:100%;height:100%;z-index:1;pointer-events:auto"
+					/>
+					<img class="ark-pro-image__native" id="nativeImage" src={ props.Article.Cover }/>
+					<img class="ark-pro-image__blur" id="blurImage" src={ props.Article.Cover }/>
+					<script>
+					htmx.on('htmx:afterRequest', (evt) => {
+						if (evt.detail.target.id !== "fileUpload" || !evt.detail.xhr) {
+							return
+						}
+
+						document.querySelector('#fileUpload').value = '';
+
+						if (evt.detail.xhr.status !== 200) {
+							alert('Не удалось загрузить картинку');
+						} else {
+							document.querySelector('#nativeImage').src = evt.detail.xhr.response;
+							document.querySelector('#blurImage').src = evt.detail.xhr.response;
+						}
+					});
+					document.querySelector('#fileUpload').addEventListener('change', function (e) {
+						const files = e.target.files;
+
+						if (!files || !files.length) {
+							return;
+						}
+
+						e.target.dispatchEvent(new CustomEvent('ark-upload-file'));
+					})
+					</script>
+				</div>
+				<div class="ark-pro-image__content">
+					<div data-lang="eng">
+						<p class="ark-pro-image__link">
+							<a href="/admin/tales/catalog">Catalog</a>
+							for _, item := range props.Article.Catalogs {
+								&nbsp;&bull;&nbsp;
+								<a href={ templ.SafeURL(fmt.Sprintf("/admin/articles/catalog/%d", item.Catalog.ID)) }>{ item.Catalog.NameEng }</a>
+							}
+						</p>
+					</div>
+					<div data-lang="ru" style="display: none">
+						<p class="ark-pro-image__link">
+							<a href="/ru/tales/catalog">Каталог</a>
+							for _, item := range props.Article.Catalogs {
+								&nbsp;&bull;&nbsp;
+								<a href={ templ.SafeURL(fmt.Sprintf("/admin/articles/catalog/%d", item.Catalog.ID)) }>{ item.Catalog.Name }</a>
+							}
+						</p>
+					</div>
+					<h1
+						contenteditable="true"
+						data-lang="eng"
+						class="ark-pro-image__name"
+						id="taleengname"
+						style="border: 1px solid var(--ark-white-64)"
+						hx-indicator="#updateResult"
+						hx-patch={ fmt.Sprintf("/admin/articles/%d", props.Article.ID) }
+						hx-trigger="input delay:500ms from:#taleengname"
+						hx-vals="javascript: nameEng:htmx.find('#taleengname').textContent.trim()"
+					>
+						{ props.Article.NameEng }
+					</h1>
+					<h1
+						data-lang="ru"
+						contenteditable="true"
+						class="ark-pro-image__name"
+						id="taleruname"
+						style="border: 1px solid var(--ark-white-64);display:none"
+						hx-indicator="#updateResult"
+						hx-patch={ fmt.Sprintf("/admin/articles/%d", props.Article.ID) }
+						hx-trigger="input delay:500ms from:#taleruname"
+						hx-vals="javascript: name:htmx.find('#taleruname').textContent.trim()"
+					>
+						{ props.Article.Name }
+					</h1>
+				</div>
+			</div>
+			<div class="ark-space_bottom-5" style="max-width:638px;margin-left:auto;margin-right:auto;">
+				<h6 class="ark-text_h6 ark-space_bottom-2">Категории</h6>
+				<div id="taleConnection" style="display:flex;gap:0.5rem;flex-wrap:wrap">
+					@ArticleConnections(props.Article.Catalogs, props.Article.ID, props.CatalogItems)
+				</div>
+			</div>
+			<h6 class="ark-text_h6 ark-space_bottom-2" style="max-width:638px;margin-left:auto;margin-right:auto;">Контент</h6>
+			<div data-lang="eng" style="max-width:638px;margin-left:auto;margin-right:auto;padding-bottom:120px">
+				<label>
+					<input type="radio" value="edit" name="prefixToggler" checked/>
+					Изменение
+				</label>
+				<label>
+					<input type="radio" value="preview" name="prefixToggler"/>
+					Предпросмотр
+				</label>
+				<ark-editor
+					id="prefixEng"
+					hx-indicator="#updateResult"
+					hx-patch={ fmt.Sprintf("/admin/articles/%d", props.Article.ID) }
+					hx-trigger="update:modelValue delay:500ms"
+					hx-vals="javascript: prefixEng:htmx.find('#prefixEng').getAttribute('model-value')"
+					model-value={ props.Article.PrefixEng }
+				></ark-editor>
+				<div hx-disable id="prefixResultEng" class="ark-space_bottom-8 ark-page-text" style="display: none">
+					@templ.Raw(props.Article.PrefixEng)
+				</div>
+				<script>
+					const prefixEngItems = Array.from(document.querySelectorAll('input[name="prefixToggler"]'));
+					prefixEngItems.forEach(input => {
+						input.addEventListener('change', function(e) {
+							const [editDisplay, previewDisplay] = e.target.value === 'edit' ? ['block', 'none'] : ['none', 'block'];
+							document.querySelector('#prefixEng').style.display = editDisplay;
+							document.querySelector('#prefixResultEng').style.display = previewDisplay;
+						});
+					});
+					document.querySelector('#prefixEng').addEventListener('update:modelValue', function(e) {
+						document.querySelector('#prefixEng').setAttribute('model-value', e.detail[0]);
+						document.querySelector('#prefixResultEng').innerHTML = e.detail[0];
+					})
+				</script>
+				<div class="ark-space_top-8 ark-text_body-s" style="margin-bottom: -1.5rem">
+					<div>
+						Для оглавления используйте иконку
+						<div class="ark-space_horizontal-2" style="display: inline">
+							@components.SvgIcon("anchor")
+						</div>
+						в полях ввода
+					</div>
+					<div>Он попросит указать <b>уникальное</b> название для якоря. После добавления можете перезагрузить страницу для отображения изменений</div>
+				</div>
+				@Chapters("en", props.Article.PrefixEng, props.Article.PostfixEng)
+				<label>
+					<input type="radio" value="edit" name="postfixTogglerEng" checked/>
+					Изменение
+				</label>
+				<label>
+					<input type="radio" value="preview" name="postfixTogglerEng"/>
+					Предпросмотр
+				</label>
+				<ark-editor
+					id="postfixEng"
+					hx-indicator="#updateResult"
+					hx-patch={ fmt.Sprintf("/admin/articles/%d", props.Article.ID) }
+					hx-trigger="update:modelValue delay:500ms"
+					hx-vals="javascript: postfixEng:htmx.find('#postfixEng').getAttribute('model-value')"
+					model-value={ props.Article.PostfixEng }
+				></ark-editor>
+				<div hx-disable class="ark-space_bottom-8 ark-page-text" id="postfixResultEng" style="display:none;">
+					@templ.Raw(props.Article.PostfixEng)
+				</div>
+				<script>
+					const postfixEngItems = Array.from(document.querySelectorAll('input[name="postfixTogglerEng"]'));
+					postfixEngItems.forEach(input => {
+						input.addEventListener('change', function(e) {
+							const [editDisplay, previewDisplay] = e.target.value === 'edit' ? ['block', 'none'] : ['none', 'block'];
+							document.querySelector('#postfixEng').style.display = editDisplay;
+							document.querySelector('#postfixResultEng').style.display = previewDisplay;
+						});
+					});
+					document.querySelector('#postfixEng').addEventListener('update:modelValue', function(e) {
+						document.querySelector('#postfixEng').setAttribute('model-value', e.detail[0]);
+						document.querySelector('#postfixResultEng').innerHTML = e.detail[0];
+					})
+				</script>
+				<section>
+					<h4 class="ark-page-text ark-space_bottom-6" style="font-weight: 500">Seo</h4>
+					<div style="display:flex;flex-direction:column;gap:0.5rem">
+						<label style="display:flex;flex-direction:column;">
+							<span lang="en">Описание</span>
+							<textarea
+								name="seoDescEng"
+								hx-indicator="#updateResult"
+								hx-patch={ fmt.Sprintf("/admin/articles/%d", props.Article.ID) }
+								hx-trigger="input delay:500ms"
+								placeholder="Article about why it's important ... etc"
+							>
+								{ props.Article.SeoDescEng }
+							</textarea>
+						</label>
+						<label style="display:flex;flex-direction:column;">
+							<span lang="en">Ключевые слова</span>
+							<textarea
+								name="seoKeywordsEng"
+								hx-indicator="#updateResult"
+								hx-patch={ fmt.Sprintf("/admin/articles/%d", props.Article.ID) }
+								hx-trigger="input delay:500ms"
+								placeholder="Books, reading, children ... etc"
+							>
+								{ props.Article.SeoKeywordsEng }
+							</textarea>
+						</label>
+					</div>
+				</section>
+			</div>
+			<div data-lang="ru" style="max-width: 638px;margin-left:auto;margin-right:auto;padding-bottom:120px;display:none">
+				<label>
+					<input type="radio" value="edit" name="prefixTogglerRu" checked/>
+					Изменение
+				</label>
+				<label>
+					<input type="radio" value="preview" name="prefixTogglerRu"/>
+					Предпросмотр
+				</label>
+				<ark-editor
+					id="prefixRu"
+					hx-indicator="#updateResult"
+					hx-patch={ fmt.Sprintf("/admin/articles/%d", props.Article.ID) }
+					hx-trigger="update:modelValue delay:500ms"
+					hx-vals="javascript: prefix:htmx.find('#prefixRu').getAttribute('model-value')"
+					model-value={ props.Article.Prefix }
+				></ark-editor>
+				<div hx-disable id="prefixRuResult" class="ark-space_bottom-8 ark-page-text" style="display: none">
+					@templ.Raw(props.Article.Prefix)
+				</div>
+				<script>
+					const prefixRuItems = Array.from(document.querySelectorAll('input[name="prefixTogglerRu"]'));
+					prefixRuItems.forEach(input => {
+						input.addEventListener('change', function(e) {
+							const [editDisplay, previewDisplay] = e.target.value === 'edit' ? ['block', 'none'] : ['none', 'block'];
+							document.querySelector('#prefixRu').style.display = editDisplay;
+							document.querySelector('#prefixRuResult').style.display = previewDisplay;
+						});
+					});
+					document.querySelector('#prefixRu').addEventListener('update:modelValue', function(e) {
+						document.querySelector('#prefixRu').setAttribute('model-value', e.detail[0]);
+						document.querySelector('#prefixRuResult').innerHTML = e.detail[0];
+					})
+				</script>
+				<div class="ark-space_top-8 ark-text_body-s" style="margin-bottom: -1.5rem">
+					<div>
+						Для оглавления используйте иконку
+						<div class="ark-space_horizontal-2" style="display: inline">
+							@components.SvgIcon("anchor")
+						</div>
+						в полях ввода
+					</div>
+					<div>Он попросит указать <b>уникальное</b> название для якоря. После добавления можете перезагрузить страницу для отображения изменений</div>
+				</div>
+				@Chapters("ru", props.Article.Prefix, props.Article.Postfix)
+				<label>
+					<input type="radio" value="edit" name="postfixTogglerRu" checked/>
+					Изменение
+				</label>
+				<label>
+					<input type="radio" value="preview" name="postfixTogglerRu"/>
+					Предпросмотр
+				</label>
+				<ark-editor
+					id="postfixRu"
+					hx-indicator="#updateResult"
+					hx-patch={ fmt.Sprintf("/admin/articles/%d", props.Article.ID) }
+					hx-trigger="update:modelValue delay:500ms"
+					hx-vals="javascript: postfix:htmx.find('#postfixRu').getAttribute('model-value')"
+					model-value={ props.Article.Postfix }
+				></ark-editor>
+				<div hx-disable class="ark-space_bottom-8 ark-page-text" id="postfixResultRu" style="display:none;">
+					@templ.Raw(props.Article.Postfix)
+				</div>
+				<script>
+					const postfixRuItems = Array.from(document.querySelectorAll('input[name="postfixTogglerRu"]'));
+					postfixRuItems.forEach(input => {
+						input.addEventListener('change', function(e) {
+							const [editDisplay, previewDisplay] = e.target.value === 'edit' ? ['block', 'none'] : ['none', 'block'];
+							document.querySelector('#postfixRu').style.display = editDisplay;
+							document.querySelector('#postfixResultRu').style.display = previewDisplay;
+						});
+					});
+					document.querySelector('#postfixRu').addEventListener('update:modelValue', function(e) {
+						document.querySelector('#postfixRu').setAttribute('model-value', e.detail[0]);
+						document.querySelector('#postfixResultRu').innerHTML = e.detail[0];
+					})
+				</script>
+				<section>
+					<h4 class="ark-page-text ark-space_bottom-6" style="font-weight: 500">Seo</h4>
+					<div style="display:flex;flex-direction:column;gap:0.5rem">
+						<label style="display:flex;flex-direction:column;">
+							<span lang="ru">Описание</span>
+							<textarea
+								name="seoDesc"
+								hx-indicator="#updateResult"
+								hx-patch={ fmt.Sprintf("/admin/articles/%d", props.Article.ID) }
+								hx-trigger="input delay:500ms"
+								placeholder="Статья о том почему полезно читать книги ... тд"
+							>
+								{ props.Article.SeoDesc }
+							</textarea>
+						</label>
+						<label style="display:flex;flex-direction:column;">
+							<span lang="ru">Ключевые слова</span>
+							<textarea
+								name="seoKeywords"
+								hx-indicator="#updateResult"
+								hx-patch={ fmt.Sprintf("/admin/articles/%d", props.Article.ID) }
+								hx-trigger="input delay:500ms"
+								placeholder="Статья, чтение, полезно, книги ... тд"
+							>
+								{ props.Article.SeoKeywords }
+							</textarea>
+						</label>
+					</div>
+				</section>
+			</div>
+		</div>
+		<div class="ark-aside ark-aside_right">
+			<p class="ark-text_body-l ark-text_medium">Настройки</p>
+			<label class="ark-label ark-space_bottom-4">
+				<input
+					type="checkbox"
+					name="published"
+					id="published"
+					class="ark-checkbox"
+					hx-patch={ fmt.Sprintf("/admin/articles/%d", props.Article.ID) }
+					if props.Article.Published != nil && *props.Article.Published {
+						checked
+					}
+					hx-vals="javascript: published:htmx.find('#published').checked?'on':'off'"
+				/>
+				Опубликован
+			</label>
+			<p class="ark-text_body-l ark-text_medium">Ссылки</p>
+			<div class="ark-space_bottom-4">
+				<p style="margin:0">
+					<a lang="en" class="ark-admin-link ark-admin-link_clamp" href={ templ.SafeURL(fmt.Sprintf("/en/article/%s", props.Article.PathEng)) }>{ fmt.Sprintf("%s", props.Article.PathEng) }</a>
+				</p>
+				<p style="margin:0">
+					<a lang="ru" class="ark-admin-link ark-admin-link_clamp" href={ templ.SafeURL(fmt.Sprintf("/ru/article/%s", props.Article.Path)) }>{ fmt.Sprintf("%s", props.Article.Path) }</a>
+				</p>
+			</div>
+			<p class="ark-text_body-l ark-text_medium">Смена языка</p>
+			<label class="ark-label">
+				<input class="ark-radio" type="radio" value="eng" name="langSwitcher" checked/>
+				Английский
+			</label>
+			<label class="ark-label ark-space_bottom-4">
+				<input class="ark-radio" type="radio" value="ru" name="langSwitcher"/>
+				Русский
+			</label>
+			<p class="ark-text_body-l ark-text_medium">Подсказки</p>
+			<div class="ark-admin-check" id="taleValidate" hx-trigger="ark-validate-event" hx-get={ fmt.Sprintf("/admin/article/%d/validate", props.Article.ID) }>
+				@ValidateArticle(props.Article)
+			</div>
+			<p class="ark-space_top-auto ark-text_body-l ark-text_medium">Обновления</p>
+			<div id="updateResult">
+				@LastUpdate(props.Article.UpdatedAt)
+			</div>
+			<button class="ark-button ark-space_top-4" data-appearance="danger" hx-delete={ fmt.Sprintf("/admin/articles/%d", props.Article.ID) } hx-confirm="Точно удаляем?">Удалить статью</button>
+		</div>
+		<script>
+			const inputs = Array.from(document.querySelectorAll('input[name="langSwitcher"]'));
+			inputs.forEach((input) => {
+				input.addEventListener('change', function(e) {
+					const ruItems = Array.from(document.querySelectorAll('[data-lang="ru"]'));
+					const engItems = Array.from(document.querySelectorAll('[data-lang="eng"]'));
+					const [ruDisplay, engDisplay] = e.target.value === 'eng' ? ['none', 'block'] : ['block', 'none'];
+
+					ruItems.forEach(el => el.style.display = ruDisplay);
+					engItems.forEach(el => el.style.display = engDisplay);
+				})
+			});
+			htmx.on('htmx:afterRequest', (evt) => {
+				if (evt.detail.target.id !== "taleValidate" && !evt.detail.target.getAttribute('hx-delete')) {
+					const el = document.querySelector('#taleValidate');
+					el.dispatchEvent(new CustomEvent('ark-validate-event'));
+				}
+			});
+		</script>
+	}
+}

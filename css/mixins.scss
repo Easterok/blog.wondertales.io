@@ -1,0 +1,126 @@
+@mixin primaryAppearance() {
+    color: var(--ark-white);
+    background: var(--ark-primary);
+    background: radial-gradient(98.44% 803.57% at 0% 23.21%, #F080CD 0%, #F080CD 53.65%, #C962A9 100%);
+}
+
+@mixin clearbutton() {
+    appearance: none;
+    padding: 0;
+    border: 0;
+    background: none;
+    font-size: inherit;
+    line-height: inherit;
+
+    &:focus,
+    &:active {
+        outline: none;
+    }
+}
+
+@mixin transition($prop, $duration: 0.2s, $timing: ease-in-out) {
+    transition: $prop $duration $timing;
+}
+
+@mixin create-shades($prefix, $base) {
+    --ark-#{$prefix}-96: rgba(#{$base}, 0.96);
+    --ark-#{$prefix}-80: rgba(#{$base}, 0.80);
+    --ark-#{$prefix}-64: rgba(#{$base}, 0.64);
+    --ark-#{$prefix}-56: rgba(#{$base}, 0.56);
+    --ark-#{$prefix}-48: rgba(#{$base}, 0.48);
+    --ark-#{$prefix}-32: rgba(#{$base}, 0.32);
+    --ark-#{$prefix}-24: rgba(#{$base}, 0.24);
+    --ark-#{$prefix}-16: rgba(#{$base}, 0.16);
+    --ark-#{$prefix}-12: rgba(#{$base}, 0.12);
+    --ark-#{$prefix}-08: rgba(#{$base}, 0.08);
+    --ark-#{$prefix}-04: rgba(#{$base}, 0.04);
+    --ark-#{$prefix}-00: rgba(#{$base}, 0);
+}
+
+@mixin hover() {
+    @media (hover: hover) and (pointer: fine) {
+        &:hover {
+            @content;
+        }
+    }
+}
+
+@mixin fullsize() {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+}
+
+@mixin desktop-mini() {
+    @media (max-width: 1024px) {
+        @content;
+    }
+}
+
+@mixin tablet() {
+    @media (max-width: 768px) {
+        @content;
+    }
+}
+
+@mixin mobile() {
+    @media (max-width: 599px) {
+        @content;
+    }
+}
+
+@mixin notMobile() {
+    @media (min-width: 600px) {
+        @content;
+    }
+}
+
+@mixin lineclamp($clamp) {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: $clamp;
+    overflow: hidden;
+}
+
+@mixin clearinput() {
+    padding: 0;
+    border: 0;
+    border-radius: inherit;
+    background: none;
+    font-size: inherit;
+    line-height: inherit;
+    font-weight: inherit;
+    color: inherit;
+    caret-color: currentColor;
+    outline: none;
+    appearance: none;
+    word-break: keep-all;
+    text-align: left;
+    -webkit-text-fill-color: currentColor; // for Safari
+
+    &:-webkit-autofill,
+    &:-webkit-autofill:hover,
+    &:-webkit-autofill:focus {
+        caret-color: var(--ark-text-color);
+        color: inherit !important;
+        -webkit-text-fill-color: var(--ark-text-color) !important;
+    }
+
+    &:-webkit-autofill {
+        // animation-name: arkOnAutoFillStart;
+
+        transition: background-color 50000s ease-in-out 0s;
+    }
+
+    // &:not(:-webkit-autofill) {
+    //   animation-name: arkOnAutoFillCancel;
+    // }
+
+    // @include ios-only {
+    //     &:active {
+    //         font-size: inherit;
+    //     }
+    // }
+}

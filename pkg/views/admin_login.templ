@@ -1,0 +1,39 @@
+package views
+
+templ AdminLogin() {
+	@AdminBase(true) {
+		<style>
+            .card {
+                display: flex;
+                flex-direction: column;
+                padding: 1rem;
+                border: 1px solid var(--ark-text-color-16);
+                border-radius: 1rem;
+                gap: 1rem;
+                width: 100%;
+                max-width: 300px;
+                margin-left: auto;
+                margin-right: auto;
+                margin-top: 2rem;
+            }
+            .input {
+                display: flex;
+                flex-direction: column;
+            }
+        </style>
+		<form hx-post="/admin/auth" class="card">
+			<h6 class="ark-text_h6 ark-space_bottom-4">Admin Blogs</h6>
+			<label class="input">
+				<span class="ark-text_body-s">Email</span>
+				<input name="email" lable="Email"/>
+			</label>
+			<label class="input">
+				<span class="ark-text_body-s">Password</span>
+				<input name="password" type="password" lable="Password"/>
+			</label>
+			<div>
+				<button type="submit">Login</button>
+			</div>
+		</form>
+	}
+}

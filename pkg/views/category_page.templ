@@ -1,0 +1,59 @@
+package views
+
+import (
+	"github.com/easterok/blogs/pkg/db"
+	"github.com/easterok/blogs/pkg/i18n"
+	"github.com/easterok/blogs/pkg/middlewares"
+	"github.com/easterok/blogs/pkg/utils"
+	"github.com/easterok/blogs/pkg/views/components"
+)
+
+type CategoryPageProps struct {
+	BaseViewProps
+
+	Category *db.Catalog
+}
+
+templ CategoryPage(props CategoryPageProps) {
+	{{
+		lang := middlewares.GetContextPreferLanguage(ctx)
+		name := i18n.TranslateBetween(lang, props.Category.NameEng, props.Category.Name)
+		cover := utils.Cdn(props.Category.Cover)
+	}}
+	@Base(props.BaseViewProps) {
+		<main class="ark-page ark-page_shift">
+			<div class="ark-pro-image">
+				<div class="ark-pro-image__container">
+					<img class="ark-pro-image__native" alt={ name } src={ cover }/>
+					<img class="ark-pro-image__blur" alt="Blur image" src={ cover }/>
+				</div>
+				<div class="ark-pro-image__content">
+					<p class="ark-pro-image__link">
+						@components.Link("/", templ.Attributes{}) {
+							{ i18n.Translate(lang, "catalog") }
+						}
+					</p>
+					<h1 class="ark-pro-image__name">
+						{ name }
+					</h1>
+				</div>
+			</div>
+			<div class="ark-page__tales">
+				<div class="ark-page__grid">
+					@CreateTale(lang)
+					if props.Category.CatalogsStories != nil {
+						for index, item := range props.Category.CatalogsStories {
+							@TaleItem(index, false, lang, &item.Story)
+							if index == 4 {
+								@PromoChild(lang)
+							}
+						}
+						if len(props.Category.CatalogsStories) < 4 {
+							@PromoChild(lang)
+						}
+					}
+				</div>
+			</div>
+		</main>
+	}
+}

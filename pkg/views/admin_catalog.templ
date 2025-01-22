@@ -1,0 +1,74 @@
+package views
+
+import (
+	"fmt"
+	"github.com/easterok/blogs/pkg/db"
+)
+
+type AdminCatalogProps struct {
+	Name  string
+	Items *[]db.Catalog
+
+	Link     string
+	EditLink string
+}
+
+templ AdminCatalog(props AdminCatalogProps) {
+	@AdminBase() {
+		<style>
+			.admin-catalog-card {
+				display: flex;
+				flex-direction: column;
+				padding: 0.5rem;
+				max-width: 300px;
+				width: 100%;
+				border: 1px solid var(--ark-text-color-16);
+				border-radius: 0.5rem;
+				text-decoration: none;
+				color: var(--ark-text-color);
+			}
+		</style>
+		<div class="ark-space_bottom-6" style="display: flex; justify-content:space-between">
+			<h5 class="ark-text_h5">
+				Категории { props.Name }
+			</h5>
+			<button class="ark-button" data-appearance="primary" hx-post={ props.EditLink + "/new" }>Добавить</button>
+		</div>
+		if props.Items == nil || len(*props.Items) == 0 {
+			<div>Категории еще не созданы</div>
+		} else {
+			<div style="display:flex;flex-wrap:wrap;gap:0.5rem">
+				for _, item := range *props.Items {
+					<div class="admin-catalog-card">
+						<img class="ark-space_bottom-4" src={ item.Cover } style="display:block; width: 100%;"/>
+						<div class="ark-space_bottom-2">
+							<span class="ark-tag" data-status="idle">ID: { fmt.Sprintf("%d", item.ID) }</span>
+							if Bool(item.ShowOnMain) {
+								<span
+									class="ark-tag"
+									data-status="processing"
+									if Bool(item.Hidden) {
+										style="opacity:0.32"
+										title="Не влияет"
+									}
+								>На главной</span>
+							}
+							if Bool(item.Hidden) {
+								<span class="ark-tag" data-status="error">Скрыт</span>
+							} else {
+								<span class="ark-tag" data-status="sent">Опубликован</span>
+							}
+						</div>
+						<p class="ark-text_h6" lang="en">{ item.NameEng }</p>
+						<p class="ark-text_h6 ark-space_bottom-2" lang="ru">{ item.Name }</p>
+						<a class="ark-admin-link" lang="en" href={ templ.SafeURL(fmt.Sprintf("/en%s/%s", props.Link, item.PathEng)) }>{ fmt.Sprintf("%s/%s", props.Link, item.PathEng) }</a>
+						<a class="ark-admin-link ark-space_bottom-2" lang="ru" href={ templ.SafeURL(fmt.Sprintf("/ru%s/%s", props.Link, item.Path)) }>{ fmt.Sprintf("%s/%s", props.Link, item.Path) }</a>
+						<p class="ark-text_body-xs">Создали { DateTimeString(item.CreatedAt) } </p>
+						<p class="ark-text_body-xs">Изменяли { DateTimeString(item.UpdatedAt) } </p>
+						<a class="ark-space_top-4 ark-button" style="background:var(--ark-text-color-04)" href={ templ.SafeURL(fmt.Sprintf("%s/%d", props.EditLink, item.ID)) }>Изменить</a>
+					</div>
+				}
+			</div>
+		}
+	}
+}

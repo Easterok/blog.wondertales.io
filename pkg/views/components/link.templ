@@ -1,0 +1,22 @@
+package components
+
+import (
+	"fmt"
+	"github.com/easterok/blogs/pkg/middlewares"
+)
+
+func formatHrefAgainstBaseCtx(base, href string) string {
+	pref := ""
+
+	if base != "" {
+		pref = "/" + base
+	}
+
+	return fmt.Sprintf("%s%s", pref, href)
+}
+
+templ Link(href string, attrs templ.Attributes) {
+	<a href={ templ.SafeURL(formatHrefAgainstBaseCtx(middlewares.GetContextBaseHref(ctx), href)) } { attrs... }>
+		{ children... }
+	</a>
+}

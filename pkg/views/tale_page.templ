@@ -1,0 +1,69 @@
+package views
+
+import (
+	"github.com/easterok/blogs/pkg/db"
+	"github.com/easterok/blogs/pkg/i18n"
+	"github.com/easterok/blogs/pkg/middlewares"
+	"github.com/easterok/blogs/pkg/utils"
+	"github.com/easterok/blogs/pkg/views/components"
+)
+
+type StoryPageProps struct {
+	BaseViewProps
+
+	Story       *db.Story
+	NextStories *[]db.Story
+}
+
+templ StoryPage(props StoryPageProps) {
+	{{
+		lang := middlewares.GetContextPreferLanguage(ctx)
+		name := i18n.TranslateBetween(lang, props.Story.NameEng, props.Story.Name)
+		cover := utils.Cdn(props.Story.Cover)
+	}}
+	@Base(props.BaseViewProps) {
+		<main class="ark-page">
+			<div class="ark-pro-image">
+				<div class="ark-pro-image__container">
+					<img alt={ name } class="ark-pro-image__native" src={ cover }/>
+					<img alt={ name + "_blur" } class="ark-pro-image__blur" src={ cover }/>
+				</div>
+				<div class="ark-pro-image__content">
+					<p class="ark-pro-image__link">
+						@components.Link("/", templ.Attributes{}) {
+							{ i18n.Translate(lang, "catalog") }
+						}
+						for _, item := range props.Story.Catalogs {
+							&nbsp;&bull;&nbsp;
+							@components.Link("/s/"+i18n.TranslateBetween(lang, item.Catalog.PathEng, item.Catalog.Path), templ.Attributes{}) {
+								{ i18n.TranslateBetween(lang, item.Catalog.NameEng, item.Catalog.Name) }
+							}
+						}
+					</p>
+					<h1 class="ark-pro-image__name">
+						{ name }
+					</h1>
+				</div>
+			</div>
+			<div class="ark-page__content">
+				<div>
+					@templ.Raw(i18n.TranslateBetween(lang, props.Story.PrefixEng, props.Story.Prefix))
+				</div>
+				@PromoInsideTale(lang)
+				<div>
+					@templ.Raw(i18n.TranslateBetween(lang, props.Story.PostfixEng, props.Story.Postfix))
+				</div>
+				if props.NextStories != nil {
+					<section>
+						<h4>Next fairy tales</h4>
+						<div>
+							for index, item := range *props.NextStories {
+								@TaleItem(index, false, lang, &item)
+							}
+						</div>
+					</section>
+				}
+			</div>
+		</main>
+	}
+}

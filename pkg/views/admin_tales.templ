@@ -1,0 +1,68 @@
+package views
+
+import (
+	"fmt"
+	"github.com/easterok/blogs/pkg/db"
+)
+
+type AdminTalesProps struct {
+	Tales *[]db.Story
+}
+
+templ AdminTales(props AdminTalesProps) {
+	@AdminBase() {
+		<div class="ark-space_bottom-6" style="display: flex; justify-content:space-between">
+			<h5 class="ark-text_h5">
+				Сказки
+			</h5>
+			<button class="ark-button" data-appearance="primary" hx-post="/admin/tales/new">Добавить</button>
+		</div>
+		<div style="display: grid;gap: 2rem;grid-template-columns: 1fr 1fr 1fr 1fr">
+			for index, item := range *props.Tales {
+				<div>
+					@TaleItem(index, true, "en", &item)
+					<div class="ark-space_top-2">
+						<div class="ark-space_bottom-2">
+							<span class="ark-tag ark-space_right-1" data-status="idle">ID:{ fmt.Sprintf("%d", item.ID) }</span>
+							if Bool(item.Published) {
+								<span class="ark-tag" data-status="sent">Опубликован</span>
+							} else {
+								<span class="ark-tag" data-status="error">Скрыт</span>
+							}
+						</div>
+						<div class="ark-space_bottom-2">
+							<p class="ark-text_body-xs">Категории</p>
+							if len(item.Catalogs) == 0 {
+								<span class="ark-tag" data-status="error">Не привязан</span>
+							} else {
+								for _, link := range item.Catalogs {
+									<a
+										class="ark-tag ark-space_right-1 ark-space_bottom-1"
+										data-status="idle"
+										href={ templ.SafeURL(fmt.Sprintf("/admin/tales/catalog/%d", link.Catalog.ID)) }
+										if Bool(link.Catalog.Hidden) {
+											title="Скрыт"
+										} else {
+											title="Опубликован"
+										}
+									>
+										if Bool(link.Catalog.Hidden) {
+											<span class="ark-icon ark-icon_warn"></span>
+										} else {
+											<span class="ark-icon ark-icon_check"></span>
+										}
+										{ link.Catalog.NameEng }
+									</a>
+								}
+							}
+						</div>
+						<a class="ark-admin-link" style="display:block" lang="en" href={ templ.SafeURL(fmt.Sprintf("/en/story/%s", item.PathEng)) }>{ fmt.Sprintf("/story/%s", item.PathEng) }</a>
+						<a class="ark-admin-link ark-space_bottom-2" style="display:block" lang="ru" href={ templ.SafeURL(fmt.Sprintf("/en/story/%s", item.Path)) }>{ fmt.Sprintf("/story/%s", item.Path) }</a>
+						<p class="ark-text_body-xs">Создали { DateTimeString(item.CreatedAt) }</p>
+						<p class="ark-text_body-xs">Обновляли { DateTimeString(item.UpdatedAt) }</p>
+					</div>
+				</div>
+			}
+		</div>
+	}
+}

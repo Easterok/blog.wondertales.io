@@ -1,0 +1,163 @@
+.ark-tale {
+    position: relative;
+    display: block;
+    width: 100%;
+    height: 363px;
+    text-decoration: none;
+    transition: transform 0.2s ease-in-out;
+
+    &__border {
+        @include fullsize;
+
+        --radius: calc(1rem + 6px);
+        border-top-left-radius: 1rem;
+        border-bottom-left-radius: 1rem;
+        border-top-right-radius: var(--radius);
+        border-bottom-right-radius: var(--radius);
+        border-right: 2px solid #cccccc;
+        background: #e4e9f1;
+        pointer-events: none;
+        z-index: 0;
+
+        &:before {
+            @include fullsize;
+
+            content: '';
+            border-right: 2px solid #d7d7d7;
+            border-radius: calc(var(--radius) - 2px);
+            z-index: 1;
+        }
+
+        &:after {
+            position: absolute;
+            top: 0;
+            right: 2px;
+            width: 100%;
+            height: 100%;
+            content: '';
+            border-right: 2px solid #ededed;
+            z-index: 1;
+            border-radius: calc(var(--radius) - 4px);
+        }
+    }
+
+    &__card {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+
+        width: calc(100% - 6px);
+
+        height: 100%;
+        border-radius: 1rem;
+
+        text-decoration: none;
+        z-index: 0;
+        overflow: hidden;
+        justify-content: flex-end;
+
+        background: var(--ark-grey-c);
+        color: var(--ark-white);
+
+        transition: all 0.2s ease-in-out;
+        transition-property: transform, box-shadow;
+        transform-style: preserve-3D;
+        transform-origin: top left;
+        will-change: transform, box-shadow;
+
+        box-shadow: 1rem 0.25rem 1rem 0px var(--shadow, transparent);
+
+        &:before {
+            position: absolute;
+            content: '';
+            left: 1.625rem;
+            top: 0;
+            width: 1px;
+            height: 100%;
+
+            background: var(--ark-white-16);
+            z-index: 1;
+            pointer-events: none;
+        }
+    }
+
+    &__content {
+        position: relative;
+        text-align: center;
+        padding: 2.5rem 1rem 0 2rem;
+        min-height: 132px;
+        box-sizing: border-box;
+    }
+
+    &__surface {
+        position: absolute;
+        left: 50%;
+        top: 0;
+        height: calc(100% - 132px);
+        width: 100%;
+        object-fit: cover;
+        object-position: center;
+        transform: translateX(-50%);
+        pointer-events: none;
+
+        z-index: -1;
+
+        @include hover {
+            opacity: 1;
+        }
+    }
+
+    &__name {
+        @include lineclamp(2);
+
+        margin: 0;
+        padding: 0;
+        font: var(--ark-font-h6);
+    }
+
+    @include hover {
+        transform: translateY(-8px);
+        opacity: 1;
+        text-decoration: none;
+
+        .ark-tale__card {
+            transform: skewY(-2deg) scaleX(0.92);
+            --shadow: rgba(0, 0, 0, 0.64);
+        }
+    }
+}
+
+.ark-promo-tale {
+    padding: 0.75rem;
+    border-radius: 1.5rem;
+    background: var(--ark-grey-c);
+    margin-top: 2rem;
+    margin-bottom: 2rem;
+
+    &__image {
+        position: relative;
+        height: 293px;
+        width: 100%;
+        border-radius: 1rem;
+        margin-bottom: 1.25rem;
+        overflow: hidden;
+        isolation: isolate;
+        z-index: 0;
+
+        &>img {
+            @include fullsize;
+            object-fit: cover;
+        }
+    }
+
+    &__content {
+        display: flex;
+        justify-content: space-between;
+        gap: 2.5rem;
+
+        @include mobile {
+            gap: 1rem;
+            flex-direction: column;
+        }
+    }
+}

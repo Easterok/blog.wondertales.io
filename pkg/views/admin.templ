@@ -1,0 +1,71 @@
+package views
+
+import (
+	"fmt"
+	"github.com/easterok/blogs/pkg/middlewares"
+	"time"
+)
+
+func Bool(a *bool) bool {
+	return a != nil && *a
+}
+
+func BoolString(a *bool) string {
+	return fmt.Sprintf("%t", Bool(a))
+}
+
+func DateString(t time.Time) string {
+	return t.Format("02 January 2006")
+}
+
+func DateTimeString(t time.Time) string {
+	return t.Format("15:04, 02 January 2006")
+}
+
+templ AdminBase(hideAside ...bool) {
+	<!DOCTYPE html>
+	<html lang="ru">
+		<head>
+			<meta charset="UTF-8"/>
+			<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+			<title>Admin | Wondertales Blogs</title>
+			<link rel="preconnect" href="https://fonts.googleapis.com" crossorigin/>
+			<link
+				rel="preload"
+				href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap"
+				as="style"
+				onload="this.onload=null;this.rel='stylesheet'"
+			/>
+			<script src="/static/htmx_2.0.3.js"></script>
+			<script src="/static/htmx_response-target_2.0.0.js"></script>
+			<script module src="/static/tiptap-vue_0.0.3.js" defer async></script>
+			<link rel="stylesheet" href={ middlewares.FormatStaticLinkFromContext("/static/admin/css/index.css", ctx) }/>
+			<link rel="stylesheet" href={ middlewares.FormatStaticLinkFromContext("/static/index.css", ctx) }/>
+			<script>
+			document.addEventListener('htmx:afterRequest', function(e) {
+				if (e.detail.xhr && e.detail.xhr.status >= 400) {
+					alert(e.detail.xhr.response);
+				}
+			})
+			</script>
+		</head>
+		<body>
+			if len(hideAside) != 1 {
+				<aside class="ark-aside">
+					<h6 class="ark-text_h6 ark-space_bottom-6">Blogs.</h6>
+					// <input type="search" placeholder="Поиск" class="ark-space_bottom-4"/>
+					<a class="ark-space_bottom-2 ark-admin-link" href="/admin/tales">Сказки</a>
+					<a class="ark-space_bottom-6 ark-space_left-4 ark-admin-link" href="/admin/tales/catalog">Категории</a>
+					<a class="ark-space_bottom-2 ark-admin-link" href="/admin/articles">Статьи</a>
+					<a class="ark-space_left-4 ark-space_bottom-6 ark-admin-link" href="/admin/articles/catalog">Категории</a>
+					<a class="ark-admin-link" href="/admin/indexing">Индексация</a>
+				</aside>
+				<main class="ark-admin-main">
+					{ children... }
+				</main>
+			} else {
+				{ children... }
+			}
+		</body>
+	</html>
+}

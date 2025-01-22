@@ -1,0 +1,101 @@
+package views
+
+import (
+	"github.com/easterok/blogs/pkg/db"
+	"github.com/easterok/blogs/pkg/i18n"
+	"github.com/easterok/blogs/pkg/middlewares"
+	"github.com/easterok/blogs/pkg/views/components"
+)
+
+type ArticlesPageProps struct {
+	BaseViewProps
+
+	Categories *[]db.Catalog
+	Articles   *[]db.Article
+	Query      *string
+}
+
+templ ArticlesSearchResult(articles *[]db.Article) {
+	if articles != nil {
+		{{ lang := middlewares.GetContextPreferLanguage(ctx) }}
+		for index, item := range *articles {
+			@ArticleItem(index, false, lang, &item)
+		}
+	}
+}
+
+templ ArticlesPage(props ArticlesPageProps) {
+	{{ lang := middlewares.GetContextPreferLanguage(ctx) }}
+	@Base(props.BaseViewProps) {
+		@Gradient("articles")
+		<main class="ark-main">
+			<h1 class="ark-main__h1">
+				{ i18n.Translate(lang, "articles_title") }
+			</h1>
+			<div class="ark-main__tags">
+				<a href="?q=" class="ark-button" data-appearance="blur">
+					<span class="ark-icon ark-icon_search"></span>
+					{ i18n.Translate(lang, "search") }
+				</a>
+				if props.Categories != nil {
+					for _, cat := range *props.Categories {
+						@components.Link("/a/"+i18n.TranslateBetween(lang, cat.PathEng, cat.Path), templ.Attributes{"class": "ark-button", "data-appearance": "white"}) {
+							{ i18n.TranslateBetween(lang, cat.NameEng, cat.Name) }
+						}
+					}
+				}
+			</div>
+			<div class="ark-main__articles">
+				if props.Articles != nil {
+					for index, item := range *props.Articles {
+						@ArticleItem(index, false, lang, &item)
+						if index == 2 {
+							@PromoChild(lang)
+						}
+					}
+					if len(*props.Articles) < 3 {
+						@PromoChild(lang)
+					}
+				}
+			</div>
+		</main>
+		if props.Query != nil {
+			<script src="/static/htmx_2.0.3.js"></script>
+			<section class="ark-search-section">
+				<div class="ark-search-section__content">
+					@components.Link("/articles", templ.Attributes{}) {
+						<span class="ark-icon ark-icon_logo ark-search-section__logo"></span>
+					}
+					<form hx-get="/articles" hx-push-url="true" hx-trigger="input delay:500ms, click from:button" hx-target="#search-result">
+						<label id="search-input" class="ark-search-section__input">
+							<input name="q" type="text" placeholder={ i18n.Translate(lang, "search_article_placeholder") } value={ *props.Query }/>
+							<button type="button">
+								<span class="ark-icon ark-icon_close"></span>
+							</button>
+						</label>
+					</form>
+					<div id="search-result" class="ark-search-section__result _articles">
+						@ArticlesSearchResult(props.Articles)
+					</div>
+				</div>
+				<script>
+				(function search() {
+					const input = document.querySelector('#search-input');
+					if (input) {
+						const native = input.querySelector('input');
+						if (native) {
+							const btn = input.querySelector('button');
+							if (btn) {
+								btn.addEventListener('click', function(e) {
+									native.value = '';
+									native.focus();
+								});
+							}
+						}
+					}
+				})()
+			</script>
+			</section>
+		}
+	}
+}

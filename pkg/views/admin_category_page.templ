@@ -1,0 +1,316 @@
+package views
+
+import (
+	"fmt"
+	"github.com/easterok/blogs/pkg/db"
+	"github.com/easterok/blogs/pkg/utils"
+)
+
+type AdminCategoryPageProps struct {
+	Category *db.Catalog
+}
+
+templ ValidateCategory(catalog *db.Catalog) {
+	{{
+		ru, ruseo := utils.ValidateRuCatalog(catalog)
+		en, enseo := utils.ValidateEnCatalog(catalog)
+	}}
+	<p>Английская версия</p>
+	if len(en) == 0 {
+		<p class="ark-text_body-s">Контент: ok</p>
+	} else {
+		<p class="ark-text_body-s">Контент:</p>
+		for index, item := range en {
+			<p class="ark-text_body-xs" style="color:var(--ark-error-fill)">{ fmt.Sprintf("%d", index + 1) }. { item }</p>
+		}
+	}
+	if len(enseo) == 0 {
+		<p class="ark-text_body-s">SEO: ok</p>
+	} else {
+		<p class="ark-text_body-s">SEO:</p>
+		for index, item := range enseo {
+			<p class="ark-text_body-xs" style="color:var(--ark-error-fill)">{ fmt.Sprintf("%d", index + 1) }. { item }</p>
+		}
+	}
+	<p>Русская версия</p>
+	if len(ru) == 0 {
+		<p class="ark-text_body-s">Контент: ok</p>
+	} else {
+		<p class="ark-text_body-s">Контент:</p>
+		for index, item := range ru {
+			<p class="ark-text_body-xs" style="color:var(--ark-error-fill)">{ fmt.Sprintf("%d", index + 1) }. { item }</p>
+		}
+	}
+	if len(ruseo) == 0 {
+		<p class="ark-text_body-s">SEO: ok</p>
+	} else {
+		<p class="ark-text_body-s">SEO:</p>
+		for index, item := range ruseo {
+			<p class="ark-text_body-xs" style="color:var(--ark-error-fill)">{ fmt.Sprintf("%d", index + 1) }. { item }</p>
+		}
+	}
+}
+
+templ AdminCategoryPage(props AdminCategoryPageProps) {
+	@AdminBase() {
+		<style>
+.grid__new {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    height: 363px;
+    padding: 0 1.5rem;
+    border-radius: 1rem;
+    border: 1px solid #2320211F;
+    background: #fff;
+    color: var(--ark-text-color);
+    text-decoration: none;
+	text-align: center;
+}
+.grid__new:hover {
+    color: var(--ark-primary);
+    border: 1px solid #C962A933;
+}
+</style>
+		<div class="taleContainer" style="padding-bottom:120px;">
+			<h5 class="ark-text_h5 ark-space_bottom-4">Изменение категории для сказок</h5>
+			<div class="ark-pro-image">
+				<div class="ark-pro-image__container">
+					<input
+						id="fileUpload"
+						hx-indicator="#updateResult"
+						hx-encoding="multipart/form-data"
+						hx-post={ fmt.Sprintf("/admin/category/%d/cover", props.Category.ID) }
+						hx-trigger="ark-upload-file"
+						name="file"
+						type="file"
+						accept="image/*"
+						style="position: absolute;left:0;top:0;width:100%;height:100%;z-index:1;pointer-events:auto"
+					/>
+					<img class="ark-pro-image__native" id="nativeImage" src={ props.Category.Cover }/>
+					<img class="ark-pro-image__blur" id="blurImage" src={ props.Category.Cover }/>
+					<script>
+					htmx.on('htmx:afterRequest', (evt) => {
+						if (evt.detail.target.id !== "fileUpload" || !evt.detail.xhr) {
+							return
+						}
+
+						document.querySelector('#fileUpload').value = '';
+
+						if (evt.detail.xhr.status !== 200) {
+							alert('Не удалось загрузить картинку');
+						} else {
+							document.querySelector('#nativeImage').src = evt.detail.xhr.response;
+							document.querySelector('#blurImage').src = evt.detail.xhr.response;
+						}
+					});
+					document.querySelector('#fileUpload').addEventListener('change', function (e) {
+						const files = e.target.files;
+
+						if (!files || !files.length) {
+							return;
+						}
+
+						e.target.dispatchEvent(new CustomEvent('ark-upload-file'));
+					})
+					</script>
+				</div>
+				<div class="ark-pro-image__content" style="bottom: 120px">
+					<p class="ark-pro-image__link">
+						<a data-lang="eng" href="/admin/tales/catalog">Catalog</a>
+						<a data-lang="ru" href="/admin/tales/catalog" style="display:none">Каталог</a>
+					</p>
+					<h1
+						contenteditable="true"
+						data-lang="eng"
+						class="ark-pro-image__name"
+						id="categorynameeng"
+						style="border: 1px solid var(--ark-white-64)"
+						hx-indicator="#updateResult"
+						hx-patch={ fmt.Sprintf("/admin/category/%d", props.Category.ID) }
+						hx-trigger="input delay:500ms from:#categorynameeng"
+						hx-vals="javascript: nameEng:htmx.find('#categorynameeng').textContent.trim()"
+					>
+						{ props.Category.NameEng }
+					</h1>
+					<h1
+						data-lang="ru"
+						contenteditable="true"
+						class="ark-pro-image__name"
+						id="categorynameru"
+						style="border: 1px solid var(--ark-white-64);display:none"
+						hx-indicator="#updateResult"
+						hx-patch={ fmt.Sprintf("/admin/category/%d", props.Category.ID) }
+						hx-trigger="input delay:500ms from:#categorynameru"
+						hx-vals="javascript: name:htmx.find('#categorynameru').textContent.trim()"
+					>
+						{ props.Category.Name }
+					</h1>
+				</div>
+			</div>
+			<div data-lang="eng" style="position:relative;max-width:638px;margin-left:auto;margin-right:auto;padding-bottom:120px;margin-top:-80px;z-index:1">
+				<div style="display: grid;gap: 2rem;grid-template-columns: 1fr 1fr">
+					<button type="button" hx-post="/admin/tales/new" hx-vals={ fmt.Sprintf("{\"categoryId\":\"%d\"}", props.Category.ID) } class="grid__new">
+						<div class="ark-button" data-appearance="primary">
+							<span class="ark-icon ark-icon_plus"></span>
+						</div>
+						<h5 style="font:var(--ark-font-h5);margin-top:1rem">Создать сказку в разделе</h5>
+					</button>
+					for index, item := range props.Category.CatalogsStories {
+						@TaleItem(index, true, "en", &item.Story)
+					}
+				</div>
+				<section>
+					<h4 class="ark-page-text ark-space_bottom-6" style="font-weight: 500">Seo</h4>
+					<div style="display:flex;flex-direction:column;gap:0.5rem">
+						<label style="display:flex;flex-direction:column;">
+							<span lang="en">Описание</span>
+							<textarea
+								name="seoDescEng"
+								hx-indicator="#updateResult"
+								hx-patch={ fmt.Sprintf("/admin/category/%d", props.Category.ID) }
+								hx-trigger="input delay:500ms"
+								placeholder="Fairy tale for children about ... etc"
+							>
+								{ props.Category.SeoDescEng }
+							</textarea>
+						</label>
+						<label style="display:flex;flex-direction:column;">
+							<span lang="en">Ключевые слова</span>
+							<textarea
+								name="seoKeywordsEng"
+								hx-indicator="#updateResult"
+								hx-patch={ fmt.Sprintf("/admin/category/%d", props.Category.ID) }
+								hx-trigger="input delay:500ms"
+								placeholder="Fairy tale, children, read, dragons ... etc"
+							>
+								{ props.Category.SeoKeywordsEng }
+							</textarea>
+						</label>
+					</div>
+				</section>
+			</div>
+			<div data-lang="ru" style="position:relative;max-width:638px;margin-left:auto;margin-right:auto;margin-top:-80px;z-index:1;display:none">
+				<div style="display: grid;gap: 2rem;grid-template-columns: 1fr 1fr">
+					<button type="button" hx-post="/admin/tales/new" hx-vals={ fmt.Sprintf("{\"categoryId\":\"%d\"}", props.Category.ID) } class="grid__new">
+						<div class="ark-button" data-appearance="primary">
+							<span class="ark-icon ark-icon_plus"></span>
+						</div>
+						<h5 style="font:var(--ark-font-h5);margin-top:1rem">Создать сказку в разделе</h5>
+					</button>
+					for index, item := range props.Category.CatalogsStories {
+						@TaleItem(index, true, "ru", &item.Story)
+					}
+				</div>
+				<section>
+					<h4 class="ark-page-text ark-space_bottom-6" style="font-weight: 500">Seo</h4>
+					<div style="display:flex;flex-direction:column;gap:0.5rem">
+						<label style="display:flex;flex-direction:column;">
+							<span lang="ru">Описание</span>
+							<textarea
+								name="seoDesc"
+								hx-indicator="#updateResult"
+								hx-patch={ fmt.Sprintf("/admin/category/%d", props.Category.ID) }
+								hx-trigger="input delay:500ms"
+								placeholder="Сказка для детей про дракона и тд"
+							>
+								{ props.Category.SeoDesc }
+							</textarea>
+						</label>
+						<label style="display:flex;flex-direction:column;">
+							<span lang="ru">Ключевые слова</span>
+							<textarea
+								name="seoKeywords"
+								hx-indicator="#updateResult"
+								hx-patch={ fmt.Sprintf("/admin/category/%d", props.Category.ID) }
+								hx-trigger="input delay:500ms"
+								placeholder="сказка, дети, драконы, читать, сказки и тд"
+							>
+								{ props.Category.SeoKeywords }
+							</textarea>
+						</label>
+					</div>
+				</section>
+			</div>
+		</div>
+		<div class="ark-aside ark-aside_right">
+			<p class="ark-text_body-l ark-text_medium">Настройки</p>
+			<label class="ark-label">
+				<input
+					type="checkbox"
+					name="hidden"
+					id="hidden"
+					class="ark-checkbox"
+					hx-patch={ fmt.Sprintf("/admin/category/%d", props.Category.ID) }
+					if Bool(props.Category.Hidden) {
+						checked
+					}
+					hx-vals="javascript: hidden:htmx.find('#hidden').checked?'on':'off'"
+				/>
+				Скрыт
+			</label>
+			<label class="ark-label ark-space_bottom-4">
+				<input
+					type="checkbox"
+					name="showOnMain"
+					id="showOnMain"
+					class="ark-checkbox"
+					hx-patch={ fmt.Sprintf("/admin/category/%d", props.Category.ID) }
+					if Bool(props.Category.ShowOnMain) {
+						checked
+					}
+					hx-vals="javascript: showOnMain:htmx.find('#showOnMain').checked?'on':'off'"
+				/>
+				Отображать на главной
+			</label>
+			<p class="ark-text_body-l ark-text_medium">Ссылки</p>
+			<div class="ark-space_bottom-4">
+				<p style="margin:0">
+					<a lang="en" class="ark-admin-link ark-admin-link_clamp" href={ templ.SafeURL(fmt.Sprintf("/en/s/%s", props.Category.PathEng)) }>{ fmt.Sprintf("%s", props.Category.PathEng) }</a>
+				</p>
+				<p style="margin:0">
+					<a lang="ru" class="ark-admin-link ark-admin-link_clamp" href={ templ.SafeURL(fmt.Sprintf("/ru/s/%s", props.Category.Path)) }>{ fmt.Sprintf("%s", props.Category.Path) }</a>
+				</p>
+			</div>
+			<p class="ark-text_body-l ark-text_medium">Смена языка</p>
+			<label class="ark-label">
+				<input class="ark-radio" type="radio" value="eng" name="langSwitcher" checked/>
+				Английский
+			</label>
+			<label class="ark-label ark-space_bottom-4">
+				<input class="ark-radio" type="radio" value="ru" name="langSwitcher"/>
+				Русский
+			</label>
+			<p class="ark-text_body-l ark-text_medium">Подсказки</p>
+			<div class="ark-admin-check" id="taleValidate" hx-trigger="ark-validate-event" hx-get={ fmt.Sprintf("/admin/category/%d/validate", props.Category.ID) }>
+				@ValidateCategory(props.Category)
+			</div>
+			<p class="ark-space_top-auto ark-text_body-l ark-text_medium">Обновления</p>
+			<div id="updateResult">
+				@LastUpdate(props.Category.UpdatedAt)
+			</div>
+			<button class="ark-button ark-space_top-4" data-appearance="danger" hx-delete={ fmt.Sprintf("/admin/category/%d", props.Category.ID) } hx-confirm="Точно удаляем?">Удалить раздел</button>
+		</div>
+		<script>
+			const inputs = Array.from(document.querySelectorAll('input[name="langSwitcher"]'));
+			inputs.forEach((input) => {
+				input.addEventListener('change', function(e) {
+					const ruItems = Array.from(document.querySelectorAll('[data-lang="ru"]'));
+					const engItems = Array.from(document.querySelectorAll('[data-lang="eng"]'));
+					const [ruDisplay, engDisplay] = e.target.value === 'eng' ? ['none', 'block'] : ['block', 'none'];
+
+					ruItems.forEach(el => el.style.display = ruDisplay);
+					engItems.forEach(el => el.style.display = engDisplay);
+				})
+			});
+
+			htmx.on('htmx:afterRequest', (evt) => {
+				if (evt.detail.target.id !== "taleValidate" && !evt.detail.target.getAttribute('hx-delete')) {
+					const el = document.querySelector('#taleValidate');
+					el.dispatchEvent(new CustomEvent('ark-validate-event'));
+				}
+			});
+		</script>
+	}
+}

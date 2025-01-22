@@ -1,0 +1,12 @@
+.env
+.DS_Store
+tmp
+node_modules/
+mongodb/
+cert.pem
+key.pem
+*_templ.go
+_db
+blogs_db
+css/step.css
+google_service_account.json

@@ -1,0 +1,140 @@
+package views
+
+import (
+	"fmt"
+	"github.com/easterok/blogs/pkg/db"
+	"github.com/easterok/blogs/pkg/i18n"
+	"github.com/easterok/blogs/pkg/middlewares"
+	"github.com/easterok/blogs/pkg/utils"
+	"github.com/easterok/blogs/pkg/views/components"
+)
+
+type TaleProps struct {
+	BaseViewProps
+
+	Categories *[]db.Catalog
+	Stories    *[]db.Story
+	Query      *string
+}
+
+func toUrl(admin bool, lang string, tale *db.Story) string {
+	if admin {
+		return fmt.Sprintf("/admin/tales/%d", tale.ID)
+	}
+
+	path := tale.Path
+
+	if lang == "en" {
+		path = tale.PathEng
+	}
+
+	return fmt.Sprintf("/story/%s", path)
+}
+
+templ TaleItem(index int, admin bool, lang string, tale *db.Story) {
+	{{ name := i18n.TranslateBetween(lang, tale.NameEng, tale.Name) }}
+	@components.Link(toUrl(admin, lang, tale), templ.Attributes{"class": "ark-tale"}) {
+		<div class="ark-tale__border"></div>
+		<div class="ark-tale__card">
+			<img
+				alt={ name }
+				src={ utils.Cdn(tale.Cover) }
+				class="ark-tale__surface"
+			/>
+			<div class="ark-tale__content" { templ.Attributes{"style": fmt.Sprintf("background:var(--wt-cover-%d)", (index + 1) % 10)}... }>
+				<h3 class="ark-tale__name">
+					{ name }
+				</h3>
+			</div>
+		</div>
+	}
+}
+
+templ TalesSearchResult(stories *[]db.Story) {
+	if stories != nil {
+		{{ lang := middlewares.GetContextPreferLanguage(ctx) }}
+		for index, item := range *stories {
+			@TaleItem(index, false, lang, &item)
+		}
+	}
+}
+
+templ Tales(props TaleProps) {
+	{{ lang := middlewares.GetContextPreferLanguage(ctx) }}
+	@Base(props.BaseViewProps) {
+		@Gradient("")
+		<main class="ark-main">
+			<h1 class="ark-main__h1">
+				@templ.Raw(i18n.Translate(lang, "main_title"))
+			</h1>
+			<div class="ark-main__tags">
+				<a href="?q=" class="ark-button" data-appearance="blur">
+					<span class="ark-icon ark-icon_search"></span>
+					{ i18n.Translate(lang, "search") }
+				</a>
+				if props.Categories != nil {
+					for _, cat := range *props.Categories {
+						@components.Link("/s/"+i18n.TranslateBetween(lang, cat.PathEng, cat.Path), templ.Attributes{"class": "ark-button", "data-appearance": "white"}) {
+							{ i18n.TranslateBetween(lang, cat.NameEng, cat.Name) }
+						}
+					}
+				}
+			</div>
+			<h2 class="ark-main__h2">
+				{ i18n.Translate(lang, "main_parents_choice") }
+				<span class="ark-icon ark-icon_heart"></span>
+			</h2>
+			<div class="ark-main__grid">
+				@CreateTale(lang)
+				if props.Stories != nil {
+					for index, item := range *props.Stories {
+						@TaleItem(index, false, lang, &item)
+						if index == 4 {
+							@PromoChild(lang)
+						}
+					}
+					if len(*props.Stories) < 4 {
+						@PromoChild(lang)
+					}
+				}
+			</div>
+		</main>
+		if props.Query != nil {
+			<script src="/static/htmx_2.0.3.js"></script>
+			<section class="ark-search-section">
+				<div class="ark-search-section__content">
+					@components.Link("/", templ.Attributes{}) {
+						<span class="ark-icon ark-icon_logo ark-search-section__logo"></span>
+					}
+					<form hx-get="/" hx-push-url="true" hx-trigger="input delay:500ms, click from:button" hx-target="#search-result">
+						<label id="search-input" class="ark-search-section__input">
+							<input name="q" type="text" placeholder={ i18n.Translate(lang, "search_placeholder") } value={ *props.Query }/>
+							<button type="button">
+								<span class="ark-icon ark-icon_close"></span>
+							</button>
+						</label>
+					</form>
+					<div id="search-result" class="ark-search-section__result">
+						@TalesSearchResult(props.Stories)
+					</div>
+				</div>
+				<script>
+				const input = document.querySelector('#search-input');
+				if (input) {
+					const native = input.querySelector('input');
+					if (native) {
+						const btn = input.querySelector('button');
+						if (btn) {
+							console.log('addListener');
+							btn.addEventListener('click', function(e) {
+								native.value = '';
+								native.focus();
+							});
+						}
+					}
+				}
+			</script>
+			</section>
+		}
+	}
+}

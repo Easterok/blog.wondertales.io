@@ -1,0 +1,142 @@
+$space: 4px;
+
+@mixin generate-space($direction) {
+    @for $i from 1 through 12 {
+        &_#{$direction}-#{$i} {
+            @if $direction ==all {
+                margin: calc($space * $i);
+            }
+
+            @if $direction ==top {
+                margin-top: calc($space * $i);
+            }
+
+            @if $direction ==bottom {
+                margin-bottom: calc($space * $i);
+            }
+
+            @if $direction ==vertical {
+                margin-top: calc($space * $i);
+                margin-bottom: calc($space * $i);
+            }
+
+            @if $direction ==left {
+                margin-left: calc($space * $i);
+            }
+
+            @if $direction ==right {
+                margin-right: calc($space * $i);
+            }
+
+            @if $direction ==horizontal {
+                margin-right: calc($space * $i);
+                margin-left: calc($space * $i);
+            }
+        }
+    }
+}
+
+.ark-space {
+    @include generate-space(all);
+    @include generate-space(top);
+    @include generate-space(bottom);
+    @include generate-space(vertical);
+    @include generate-space(left);
+    @include generate-space(right);
+    @include generate-space(horizontal);
+
+    &_auto {
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    &_top-auto {
+        margin-top: auto;
+    }
+
+    &_bottom-auto {
+        margin-bottom: auto;
+    }
+
+    &_left-auto {
+        margin-left: auto;
+    }
+
+    &_right-auto {
+        margin-right: auto;
+    }
+}
+
+.ark-text {
+    &_h1 {
+        font: var(--ark-font-h1);
+    }
+
+    &_h2 {
+        font: var(--ark-font-h2);
+    }
+
+    &_h3 {
+        font: var(--ark-font-h3);
+    }
+
+    &_h4 {
+        font: var(--ark-font-h4);
+    }
+
+    &_h5 {
+        font: var(--ark-font-h5);
+    }
+
+    &_h6 {
+        font: var(--ark-font-h6);
+    }
+
+    &_body-xl {
+        font: var(--ark-font-xl);
+    }
+
+    &_body-l {
+        font: var(--ark-font-l);
+    }
+
+    &_body-l-2 {
+        font: var(--ark-font-l-2);
+    }
+
+    &_body-m {
+        font: var(--ark-font-m);
+    }
+
+    &_body-m-2 {
+        font: var(--ark-font-m-2);
+    }
+
+    &_body-s {
+        font: var(--ark-font-s);
+    }
+
+    &_body-s-2 {
+        font: var(--ark-font-s-2);
+    }
+
+    &_body-xs {
+        font: var(--ark-font-xs);
+    }
+
+    &_normal {
+        font-weight: 400;
+    }
+
+    &_medium {
+        font-weight: 500;
+    }
+
+    &_semibold {
+        font-weight: 600;
+    }
+
+    &_bold {
+        font-weight: 700;
+    }
+}

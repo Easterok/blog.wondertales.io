@@ -1,0 +1,72 @@
+package views
+
+import (
+	"github.com/easterok/blogs/pkg/db"
+	"github.com/easterok/blogs/pkg/i18n"
+	"github.com/easterok/blogs/pkg/middlewares"
+	"github.com/easterok/blogs/pkg/utils"
+	"github.com/easterok/blogs/pkg/views/components"
+)
+
+type ArticlePageProps struct {
+	BaseViewProps
+
+	Article      *db.Article
+	NextArticles *[]db.Article
+}
+
+templ ArticlePage(props ArticlePageProps) {
+	{{
+		lang := middlewares.GetContextPreferLanguage(ctx)
+		name := i18n.TranslateBetween(lang, props.Article.NameEng, props.Article.Name)
+		prefix := i18n.TranslateBetween(lang, props.Article.PrefixEng, props.Article.Prefix)
+		postfix := i18n.TranslateBetween(lang, props.Article.PostfixEng, props.Article.Postfix)
+		cover := utils.Cdn(props.Article.Cover)
+	}}
+	@Base(props.BaseViewProps) {
+		<main class="ark-page">
+			<div class="ark-pro-image">
+				<div class="ark-pro-image__container">
+					<img alt={ name } class="ark-pro-image__native" src={ cover }/>
+					<img alt={ name + "_blur" } class="ark-pro-image__blur" src={ cover }/>
+				</div>
+				<div class="ark-pro-image__content">
+					<p class="ark-pro-image__link">
+						@components.Link("/articles", templ.Attributes{}) {
+							{ i18n.Translate(lang, "catalog") }
+						}
+						for _, cat := range props.Article.Catalogs {
+							&nbsp;&bull;&nbsp;
+							@components.Link("/a/"+i18n.TranslateBetween(lang, cat.Catalog.PathEng, cat.Catalog.Path), templ.Attributes{}) {
+								{ i18n.TranslateBetween(lang, cat.Catalog.NameEng, cat.Catalog.Name) }
+							}
+						}
+					</p>
+					<h1 class="ark-pro-image__name">
+						{ name }
+					</h1>
+				</div>
+			</div>
+			<div class="ark-page__content ark-space_bottom-8">
+				<div>
+					@templ.Raw(prefix)
+				</div>
+				@Chapters(lang, prefix, postfix)
+				<div>
+					@templ.Raw(postfix)
+				</div>
+			</div>
+			@PromoChild(lang, true)
+			if props.NextArticles != nil {
+				<section>
+					<h4>Next fairy tales</h4>
+					<div>
+						for _, item := range *props.NextArticles {
+							@ArticleItem(-1, false, lang, &item)
+						}
+					</div>
+				</section>
+			}
+		</main>
+	}
+}

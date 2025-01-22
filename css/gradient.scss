@@ -1,0 +1,41 @@
+.ark-main-bg {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 678px;
+    isolation: isolate;
+    overflow: hidden;
+    pointer-events: none;
+    background: var(--ark-primary);
+    background: radial-gradient(98.44% 803.57% at 0% 23.21%, #F080CD 0%, #F080CD 53.65%, #C962A9 100%);
+
+    &__over {
+        position: absolute;
+        width: 2408px;
+        height: 842px;
+        top: 50%;
+        left: 50%;
+        transform: translateX(-50%);
+        background: var(--ark-background-color);
+        filter: blur(3rem);
+        border-radius: 100%;
+    }
+
+    &[data-type="articles"] {
+        background: #7E26B5;
+    }
+
+    &:before {
+        @include fullsize;
+        content: '';
+        z-index: 1;
+        background-image: url(/static/noisedots.webp);
+    }
+
+    &:after {
+        @include fullsize;
+        content: '';
+        background-image: url(/static/noise.webp);
+    }
+}

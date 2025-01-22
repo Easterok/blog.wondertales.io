@@ -1,0 +1,17 @@
+package views
+
+var base404Props = BaseViewProps{
+	Title:      "Страница не найдена",
+	TitleEn:    "Page not found",
+	Desc:       "",
+	DescEn:     "",
+	Keywords:   "",
+	KeywordsEn: "",
+	Image:      "",
+}
+
+templ P404() {
+	@Base(base404Props) {
+		<div class="ark-main">404</div>
+	}
+}

@@ -1,0 +1,75 @@
+.ark-icon {
+    @include transition(transform);
+
+    position: relative;
+    display: inline-block;
+    inline-size: 1em;
+    block-size: 1em;
+    font-size: var(--icon-size, 1.5rem);
+    flex-shrink: 0;
+    border: 0 solid transparent;
+    vertical-align: middle;
+    box-sizing: border-box;
+
+    &:after {
+        position: absolute;
+        top: 0;
+        left: 0;
+        inline-size: 100%;
+        block-size: 100%;
+        content: '';
+        display: block;
+        -webkit-mask: var(--mask) no-repeat center / contain;
+        mask: var(--mask) no-repeat center / contain;
+        -webkit-mask-composite: source-in, xor;
+        mask-composite: intersect;
+        background: currentColor;
+    }
+
+    &_logo {
+        --mask: url(/static/svg/logo.svg);
+        inline-size: 83px;
+        block-size: 48px;
+    }
+
+    &_blog {
+        --mask: url(/static/svg/blog.svg);
+    }
+
+    &_tale {
+        --mask: url(/static/svg/tales.svg);
+    }
+
+    &_burger {
+        --mask: url(/static/svg/burger.svg);
+    }
+
+    &_heart {
+        --mask: url(/static/svg/heart.svg);
+        inline-size: 30px;
+        block-size: 34px;
+        margin-left: 0.25rem
+    }
+
+    &_plus {
+        --mask: url(/static/svg/plus.svg);
+    }
+
+    &_search {
+        --mask: url(/static/svg/search.svg)
+    }
+
+    &_close {
+        --mask: url(/static/svg/close.svg)
+    }
+
+    &_warn {
+        --mask: url(/static/svg/warning.svg);
+        color: var(--ark-warning-fill);
+    }
+
+    &_check {
+        --mask: url(/static/svg/check.svg);
+        color: var(--ark-success-fill);
+    }
+}

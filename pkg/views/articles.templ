@@ -1,0 +1,39 @@
+package views
+
+import (
+	"fmt"
+	"github.com/easterok/blogs/pkg/db"
+	"github.com/easterok/blogs/pkg/i18n"
+	"github.com/easterok/blogs/pkg/utils"
+	"github.com/easterok/blogs/pkg/views/components"
+)
+
+func toArticleUrl(admin bool, lang string, article *db.Article) string {
+	if admin {
+		return fmt.Sprintf("/admin/articles/%d", article.ID)
+	}
+
+	path := article.Path
+
+	if lang == "en" {
+		path = article.PathEng
+	}
+
+	return fmt.Sprintf("/article/%s", path)
+}
+
+templ ArticleItem(index int, admin bool, lang string, article *db.Article) {
+	{{ name := i18n.TranslateBetween(lang, article.NameEng, article.Name) }}
+	@components.Link(toArticleUrl(admin, lang, article), templ.Attributes{"class": "ark-article"}) {
+		<img src={ utils.Cdn(article.Cover) } alt={ name } height="313px" class="ark-article__cover"/>
+		<div class="ark-article__content">
+			if index == 0 {
+				<p class="ark-article__badge">{ i18n.Translate(lang, "articles_popular") }</p>
+			}
+			<h5 class="ark-article__name">{ name }</h5>
+			<div class="ark-article__desc">
+				@templ.Raw(utils.RemoveLinks(i18n.TranslateBetween(lang, article.PrefixEng, article.Prefix)))
+			</div>
+		</div>
+	}
+}

@@ -1,0 +1,11 @@
+package components
+
+import "fmt"
+
+func toUrl(name string) string {
+	return fmt.Sprintf("--mask: url(/static/svg/%s.svg)", name)
+}
+
+templ SvgIcon(name string) {
+	<span class="ark-icon" { templ.Attributes{"style": toUrl(name)}... }></span>
+}
